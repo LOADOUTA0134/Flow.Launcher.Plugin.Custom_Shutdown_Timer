@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Flow.Launcher.Plugin.Custom_Shutdown_Timer</name>
+    </assembly>
+    <members>
+        <member name="M:FlowLauncher.Plugin.CustomShutdownTimer.CustomShutdownTimer.CancelShutdown">
+            <summary>
+            Cancels any pending scheduled shutdown.
+            </summary>
+        </member>
+    </members>
+</doc>
