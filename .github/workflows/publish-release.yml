@@ -8,42 +8,90 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
-    
+    runs-on: windows-latest # Korrekt für C# Flow Launcher Plugins
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    
-    - name: get version
+
+    - name: Get Plugin Version
       id: version
       uses: notiz-dev/github-action-json-property@release
-      with: 
-        path: '/Flow.Launcher.Plugin.Custom_Shutdown_Timer/blob/main/plugin.json'
+      with:
+        path: 'plugin.json' # Korrigierter Pfad
         prop_path: 'Version'
 
-    - run: echo ${{steps.version.outputs.prop}}
-      
+    - name: Get Plugin ID
+      id: plugin_id
+      uses: notiz-dev/github-action-json-property@release
+      with:
+        path: 'plugin.json' # Korrigierter Pfad
+        prop_path: 'ID'
+
+    - run: echo "Detected version: ${{steps.version.outputs.prop}}"
+    - run: echo "Detected Plugin ID: ${{steps.plugin_id.outputs.prop}}"
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '7.0.x'
-    
+        dotnet-version: '7.0.x' # Stellen Sie sicher, dass dies mit Ihrem Projekt übereinstimmt (z.B. '8.0.x' für .NET 8)
+
     - name: Restore dependencies
       run: dotnet restore
-    
-    - name: Create Plugin Package
-      shell: pwsh
+
+    - name: Build and Pack Plugin
+      shell: pwsh # PowerShell für Windows-spezifische Befehle wie Compress-Archive
       run: |
-        cd DailyFolder
-        ./release.ps1
-    
-    - name: Publish
+        # Definieren Sie den Namen der .csproj-Datei Ihres Projekts
+        # Stellen Sie sicher, dass 'FlowLauncher.Plugin.Custom_Shutdown_Timer.csproj' der genaue Name Ihrer Projektdatei ist!
+        $projectFile = "FlowLauncher.Plugin.Custom_Shutdown_Timer.csproj"
+
+        # Definieren Sie den temporären Ausgabeordner für das Publish-Ergebnis
+        $pluginOutputFolder = ".\publish_output"
+        New-Item -ItemType Directory -Force -Path $pluginOutputFolder
+
+        # Führen Sie 'dotnet publish' aus, um das Plugin zu kompilieren und als selbstständige Anwendung zu verpacken
+        dotnet publish $projectFile `
+          --configuration Release `
+          --output $pluginOutputFolder `
+          --no-build ` # --no-build ist wichtig, da wir bereits 'dotnet build' hatten
+          /p:UseAppHost=false ` # Kein ausführbares .exe-Host-Programm
+          /p:PublishSingleFile=true ` # Alles in eine DLL packen
+          /p:IncludeNativeLibrariesForSelfExtract=true ` # Inklusive nativer Bibliotheken
+          /p:GenerateRuntimeConfig=true ` # Laufzeitkonfigurationsdatei generieren
+          /p:DebugType=None /p:DebugSymbols=false # Keine Debug-Symbole in der Veröffentlichung
+
+        # Definieren Sie den finalen Namen für die .flowlauncher-Datei
+        $zipFileName = "Flow.Launcher.Plugin.${{ steps.plugin_id.outputs.prop }}.flowlauncher"
+
+        # Erstellen Sie die .flowlauncher-Datei aus dem veröffentlichten Inhalt
+        Compress-Archive -Path "$pluginOutputFolder\*" -DestinationPath $zipFileName -Force
+        
+        echo "::set-output name=plugin_package_path::$zipFileName" # Setzt den Pfad als Output
+
+      id: package # Fügen Sie eine ID für diesen Schritt hinzu, um auf seinen Output zugreifen zu können
+
+    - name: Publish Release to GitHub
       uses: softprops/action-gh-release@v1
       if: success()
       with:
         name: "Flow Launcher Plugin Release v${{steps.version.outputs.prop}}"
         draft: false
         prerelease: false
-        files: "Flow.Launcher.Plugin.Custom_Shutdown_Timer/blob/main/Custom Shutdown Timer-1.0.0.zip"
+        # Verwenden Sie den Output-Pfad des vorherigen Schritts
+        files: "${{ steps.package.outputs.plugin_package_path }}"
+        body: |
+          ### Release Notes for v${{steps.version.outputs.prop}}
+          
+          This is an automated release for the **Custom Shutdown Timer** Flow Launcher plugin.
+          
+          **Changes in this version:**
+          - (List your specific changes here. For example: Added 'day' unit, improved error handling)
+          - Bug fixes and improvements.
+          
+          ---
+          **Download:** [Flow.Launcher.Plugin.${{ steps.plugin_id.outputs.prop }}.flowlauncher](https://github.com/${{ github.repository }}/releases/download/v${{steps.version.outputs.prop}}/Flow.Launcher.Plugin.${{ steps.plugin_id.outputs.prop }}.flowlauncher)
+          **Source Code:** https://github.com/${{ github.repository }}/tree/v${{steps.version.outputs.prop}}
+          **Flow Launcher Plugin Page (once approved):** (Add the URL to your plugin on the Flow Launcher website once it's listed)
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
