@@ -1,0 +1,12 @@
+{
+    "ID": "F278D1BBF9E647EFAEB408D0E2BB7382",
+    "ActionKeyword": "cst",
+    "Name": "Custom_Shutdown_Timer",
+    "Description": "A Custom Shutdown Timer Plugin",
+    "Author": "LOADOUTA0134",
+    "Version": "1.0.0",
+    "Language": "csharp",
+    "Website": "https://github.com/LOADOUTA0134/Flow.Launcher.Plugin.Custom_Shutdown_Timer",
+    "IcoPath": "icon.png",
+    "ExecuteFileName": "Flow.Launcher.Plugin.Custom_Shutdown_Timer.dll"
+}
