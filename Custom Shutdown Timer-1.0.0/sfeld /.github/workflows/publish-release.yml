@@ -9,15 +9,15 @@ on:
 
 jobs:
   publish:
-    runs-on: windows-latest # C# Flow Launcher plugins usually target Windows
+    runs-on: windows-latest 
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v1 # Use v1 for compatibility with older .NET versions if needed, or v3 for .NET 6+
+        uses: actions/setup-dotnet@v1 
         with:
-          dotnet-version: '7.0.x' # Or whatever .NET version your project targets, e.g., '6.0.x', '7.0.x'
+          dotnet-version: '7.0.x' 
 
       - name: Get Plugin Version
         id: version
