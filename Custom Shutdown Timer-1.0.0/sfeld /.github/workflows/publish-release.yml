@@ -17,7 +17,7 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v1 # Use v1 for compatibility with older .NET versions if needed, or v3 for .NET 6+
         with:
-          dotnet-version: '8.0.x' # Or whatever .NET version your project targets, e.g., '6.0.x', '7.0.x'
+          dotnet-version: '7.0.x' # Or whatever .NET version your project targets, e.g., '6.0.x', '7.0.x'
 
       - name: Get Plugin Version
         id: version
@@ -45,8 +45,7 @@ jobs:
           $pluginOutputFolder = ".\output"
           New-Item -ItemType Directory -Force -Path $pluginOutputFolder
 
-          # Replace 'FlowLauncher.Plugin.CustomShutdownTimer.csproj' with your actual .csproj file name
-          dotnet publish "FlowLauncher.Plugin.CustomShutdownTimer.csproj" `
+          dotnet publish "FlowLauncher.Plugin.Custom Shutdown Timer.csproj" `
             --configuration Release `
             --output $pluginOutputFolder `
             --no-build `
@@ -56,8 +55,6 @@ jobs:
             /p:GenerateRuntimeConfig=true `
             /p:DebugType=None /p:DebugSymbols=false
 
-          # Zip the published output into a .flowlauncher file
-          # The zip file name should typically be the Plugin's ID for consistency in Flow Launcher
           $zipFileName = "Flow.Launcher.Plugin.${{ steps.plugin_id.outputs.prop }}.flowlauncher"
           Compress-Archive -Path "$pluginOutputFolder\*" -DestinationPath $zipFileName -Force
 
@@ -65,7 +62,7 @@ jobs:
         if: success()
         uses: softprops/action-gh-release@v1
         with:
-          files: "Flow.Launcher.Plugin.${{ steps.plugin_id.outputs.prop }}.flowlauncher" # Use the generated .flowlauncher file
+          files: "Flow.Launcher.Plugin.${{ steps.plugin_id.outputs.prop }}.flowlauncher" 
           tag_name: "v${{steps.version.outputs.prop}}"
           name: "Flow Launcher Plugin Release v${{steps.version.outputs.prop}}"
           body: |
